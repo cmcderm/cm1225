@@ -54,18 +54,18 @@ public class RentalAgreement {
         addFieldLn(s, "Charge days: ", Long.toString(chargeDaysCount));
 
         BigDecimal preDiscountCharge = toolChargeDetail.getDailyCharge().multiply(BigDecimal.valueOf(chargeDaysCount));
-        addFieldLn(s, "Pre-discount charge: ", preDiscountCharge.toString());
+        addFieldLn(s, "Pre-discount charge: $", preDiscountCharge.toString());
 
         s.append("Discount percent: ");
         s.append(discountPercent);
         s.append("%");
         s.append(System.lineSeparator());
 
-        BigDecimal discountAmount = preDiscountCharge.multiply(discountPercent).divide(BigDecimal.valueOf(100), RoundingMode.HALF_DOWN);
+        BigDecimal discountAmount = preDiscountCharge.multiply(discountPercent).divide(BigDecimal.valueOf(100), RoundingMode.FLOOR);
         addFieldLn(s, "Discount amount: $", discountAmount.toString());
 
         BigDecimal finalCharge = preDiscountCharge.subtract(discountAmount);
-        addFieldLn(s, "Final charge: ", finalCharge.toString());
+        addFieldLn(s, "Final charge: $", finalCharge.toString());
 
         return s.toString();
     }
@@ -81,12 +81,10 @@ public class RentalAgreement {
 
         if (holidays.contains(d)) {
             return toolChargeDetail.getHolidayCharge();
-        }
-
-        if (weekdays.contains(d.getDayOfWeek())) {
+        } else if (weekdays.contains(d.getDayOfWeek())) {
             return toolChargeDetail.getWeekdayCharge();
         } else if (weekend.contains(d.getDayOfWeek())) {
-            return toolChargeDetail.getWeekdayCharge();
+            return toolChargeDetail.getWeekendCharge();
         }
 
         // Unreachable

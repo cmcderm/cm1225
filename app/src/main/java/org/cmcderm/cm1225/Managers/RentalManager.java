@@ -5,6 +5,7 @@ import org.cmcderm.cm1225.Models.Tool;
 import org.cmcderm.cm1225.Models.ToolChargeDetail;
 
 import java.math.BigDecimal;
+import java.security.InvalidParameterException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,14 @@ public class RentalManager {
             int rentalDays,
             BigDecimal discountAmount
     ) throws NoSuchFieldException {
+        if (rentalDays < 0) {
+            throw new InvalidParameterException("Rental days less than 0");
+        }
+
+        if (discountAmount.compareTo(BigDecimal.valueOf(100)) > 0) {
+            throw new InvalidParameterException(("Discount percentage greater than 100%"));
+        }
+
         Optional<Tool> tool = tools.stream().filter(t -> t.getToolCode().equals(toolCode)).findAny();
 
         if (tool.isEmpty()) {
@@ -31,15 +40,13 @@ public class RentalManager {
         }
 
         Optional<ToolChargeDetail> toolChargeDetail = toolChargeDetails.stream()
-                .filter(t -> t.getToolType() == tool.get().getToolType())
+                .filter(t -> t.getToolType().equals(tool.get().getToolType()))
                 .findAny();
 
         if (toolChargeDetail.isEmpty()) {
             throw new NoSuchFieldException("Tool type " + tool.get().getToolType() + " has no Charge Details");
         }
 
-        RentalAgreement rentalAgreement = new RentalAgreement(tool.get(), toolChargeDetail.get(), checkoutDate, rentalDays, discountAmount);
-
-        return rentalAgreement;
+        return new RentalAgreement(tool.get(), toolChargeDetail.get(), checkoutDate, rentalDays, discountAmount);
     }
 }
