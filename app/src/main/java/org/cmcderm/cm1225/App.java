@@ -3,14 +3,113 @@
  */
 package org.cmcderm.cm1225;
 
+import org.cmcderm.cm1225.Managers.RentalManager;
+import org.cmcderm.cm1225.Models.RentalAgreement;
+import org.cmcderm.cm1225.Models.Tool;
+import org.cmcderm.cm1225.Models.ToolChargeDetail;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Scanner;
+
 public class App {
     public String getGreeting() {
         return "Hello World!";
     }
 
     public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+        System.out.println("Tool Rental Demo");
 
-        System.out.println("Rental app");
+        List<Tool> tools = List.of(
+                new Tool("CHNS", "Chainsaw", "Stihl"),
+                new Tool("LADW", "Ladder", "Werner"),
+                new Tool("JAKD", "Jackhammer", "DeWalt"),
+                new Tool("JAKR", "Jackhammer", "Ridgid")
+        );
+        List<ToolChargeDetail> toolChargeDetails = List.of(
+                new ToolChargeDetail("Ladder", BigDecimal.valueOf(1.99), true, true, false),
+                new ToolChargeDetail("Chainsaw", BigDecimal.valueOf(1.49), true, false, true),
+                new ToolChargeDetail("Jackhammer", BigDecimal.valueOf(2.99), true, false, false)
+        );
+
+        RentalManager rentalManager = new RentalManager(
+                tools,
+                toolChargeDetails
+        );
+
+        Scanner stdin = new Scanner(System.in);
+
+        System.out.println("Tools to rent are: ");
+        System.out.println("Tool Code\tTool Type\tBrand");
+        System.out.println("-------------------------------------");
+        for (Tool tool : tools) {
+            System.out.println(tool.getToolCode() + "\t\t" + tool.getToolType() + "\t" + tool.getBrand());
+        }
+
+        System.out.println("Tool Charges are: ");
+        System.out.println("Daily\tWeekday\tWeekend\tHoliday");
+        System.out.println("-------------------------------------");
+        for (ToolChargeDetail tcd : toolChargeDetails) {
+            System.out.println(tcd.getDailyCharge() + "\t" + tcd.getWeekdayCharge() + "\t" + tcd.getWeekendCharge() + "\t" + tcd.getHolidayCharge());
+        }
+
+        System.out.println("Input tool code: ");
+        String toolCode = stdin.next().trim().toUpperCase();
+
+        System.out.println("Input days to rent tool: ");
+        int rentalDaysCount;
+        try {
+            rentalDaysCount = stdin.nextInt();
+        } catch (Exception e){
+            System.err.println("Invalid Rental Days entered");
+            return;
+        }
+
+        System.out.println("Input discount percentage as 0-100 (e.g. 20 = 20%): ");
+        int discountPercent;
+        try {
+            discountPercent = stdin.nextInt();
+        } catch (Exception e){
+            System.err.println("Invalid discount percentage entered");
+            return;
+        }
+
+        System.out.println("Input checkout date (mm/dd/yy): ");
+        DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern("MM/d/yy");
+        LocalDate checkoutDate;
+        try {
+            String checkoutDate_str = stdin.next();
+            checkoutDate = LocalDate.parse(checkoutDate_str, dtFormatter);
+        } catch (Exception e) {
+            System.err.println("Invalid checkout date entered: " + e.getMessage());
+            return;
+        }
+
+        System.out.println("You entered: ");
+        System.out.println(toolCode);
+        System.out.println(rentalDaysCount);
+        System.out.println(discountPercent);
+        System.out.println(checkoutDate);
+
+        RentalAgreement rentalAgreement;
+
+        try {
+            rentalAgreement = rentalManager.createRentalAgreement(
+                toolCode,
+                checkoutDate,
+                rentalDaysCount,
+                BigDecimal.valueOf(discountPercent)
+            );
+        } catch (NoSuchFieldException e) {
+            System.err.println("No such value for field entered: " + e.getMessage());
+            return;
+        }
+
+        System.out.println();
+        System.out.println("Your rental agreement:");
+        System.out.println(rentalAgreement.generate());
     }
 }
